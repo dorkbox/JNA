@@ -35,7 +35,7 @@ plugins {
 
 object Extras {
     // set for the project
-    const val description = "Utilities for use within Java projects"
+    const val description = "JNA implementations for Linux, MacOS, and Windows"
     const val group = "com.dorkbox"
     const val version = "1.0"
 
@@ -86,12 +86,11 @@ dependencies {
     api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
 
+    api("org.slf4j:slf4j-api:2.0.6")
 
     val jnaVersion = "5.12.1"
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
-
-    api("org.slf4j:slf4j-api:2.0.6")
 
 
     testImplementation("junit:junit:4.13.2")
