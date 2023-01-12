@@ -2,6 +2,7 @@ Dorkbox General Utilities
 
 ###### [![Dorkbox](https://badge.dorkbox.com/dorkbox.svg "Dorkbox")](https://git.dorkbox.com/dorkbox/JNA) [![Github](https://badge.dorkbox.com/github.svg "Github")](https://github.com/dorkbox/JNA) [![Gitlab](https://badge.dorkbox.com/gitlab.svg "Gitlab")](https://gitlab.com/dorkbox/JNA)
 
+Native JNA extensions for Linux, MacOS, and Windows, Java 1.8+
 
 Maven Info
 ---------
