@@ -1,4 +1,4 @@
- - JNA - JNA implementations for Linux, MacOS, and Windows
+ - JNA - Native JNA extensions for Linux, MacOS, and Windows, Java 1.8+
    [The Apache Software License, Version 2.0]
    https://git.dorkbox.com/dorkbox/JNA
    Copyright 2023
