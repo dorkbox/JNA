@@ -14,8 +14,9 @@ module dorkbox.jna {
 
     requires transitive kotlin.stdlib;
 
+    requires transitive org.slf4j;
+
+    // these are compile only deps
     requires static com.sun.jna;
     requires static com.sun.jna.platform;
-
-    requires static org.slf4j;
 }
