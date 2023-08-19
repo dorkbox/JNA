@@ -12,7 +12,7 @@ Maven Info
     <dependency>
       <groupId>com.dorkbox</groupId>
       <artifactId>JNA</artifactId>
-      <version>1.0</version>
+      <version>1.2</version>
     </dependency>
 </dependencies>
 ````
@@ -22,7 +22,7 @@ Gradle Info
 ````
 dependencies {
     ...
-    compile "com.dorkbox:JNA:1.0"
+    compile "com.dorkbox:JNA:1.2"
 }
 ````
 

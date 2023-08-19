@@ -5,12 +5,6 @@
      Dorkbox LLC
 
    Extra license information
-     - SLF4J - Simple facade or abstraction for various logging frameworks
-       [MIT License]
-       https://www.slf4j.org
-       Copyright 2023
-         QOS.ch
-
      - Kotlin - 
        [The Apache Software License, Version 2.0]
        https://github.com/JetBrains/kotlin
@@ -30,6 +24,12 @@
        https://github.com/twall/jna
        Copyright 2023
          Timothy Wall
+
+     - SLF4J - Simple facade or abstraction for various logging frameworks
+       [MIT License]
+       https://www.slf4j.org
+       Copyright 2023
+         QOS.ch
 
      - OS - Information about the system, Java runtime, OS, Window Manager, and Desktop Environment.
        [The Apache Software License, Version 2.0]

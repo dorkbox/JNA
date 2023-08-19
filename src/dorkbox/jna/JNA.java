@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class JNA {
      */
     public static
     String getVersion() {
-        return "1.1";
+        return "1.2";
     }
 
     static {
@@ -45,7 +45,6 @@ class JNA {
         dorkbox.updates.Updates.INSTANCE.add(JNA.class, "b416694a22ed4a1d9e612a1e9b6c76cf", getVersion());
     }
 
-    @SuppressWarnings("unchecked")
     public static
     NativeLibrary register(final String libraryName, final Class<?> clazz) throws IllegalArgumentException {
         final Map<String, Object> options = new HashMap<String, Object>();

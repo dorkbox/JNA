@@ -35,7 +35,7 @@ object Extras {
     // set for the project
     const val description = "Native JNA extensions for Linux, MacOS, and Windows, Java 1.8+"
     const val group = "com.dorkbox"
-    const val version = "1.1"
+    const val version = "1.2"
 
     // set as project.ext
     const val name = "JNA"
@@ -79,12 +79,12 @@ tasks.jar.get().apply {
 // NOTE: compileOnly is used because there are some classes/dependencies that ARE NOT necessary to be included, UNLESS the user
 //  is actually using that part of the library. If this happens, they will (or should) already be using the dependency)
 dependencies {
-    api("com.dorkbox:OS:1.6")
+    api("com.dorkbox:OS:1.8")
     api("com.dorkbox:Updates:1.1")
 
-    api("org.slf4j:slf4j-api:2.0.7")
+    implementation("org.slf4j:slf4j-api:2.0.7")
 
-    val jnaVersion = "5.12.1"
+    val jnaVersion = "5.13.0"
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
