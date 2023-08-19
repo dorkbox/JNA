@@ -6,6 +6,7 @@ module dorkbox.jna {
     exports dorkbox.jna.macos;
     exports dorkbox.jna.macos.cocoa;
     exports dorkbox.jna.macos.foundation;
+    exports dorkbox.jna.macos.structs;
     exports dorkbox.jna.windows;
     exports dorkbox.jna.windows.structs;
 
