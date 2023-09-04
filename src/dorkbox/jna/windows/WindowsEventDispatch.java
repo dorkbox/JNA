@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +57,8 @@ class WindowsEventDispatch implements Runnable {
     private final String name = NAME + COUNT.getAndIncrement();
     private final Map<Integer, List<Listener>> messageIDs = new HashMap<Integer, List<Listener>>();
 
-    private final Object lock = new Object();
+    private final Lock lock = new ReentrantLock();
+    private final Condition condition = lock.newCondition();
 
     private Thread dispatchThread;
 
@@ -78,9 +82,16 @@ class WindowsEventDispatch implements Runnable {
 
             try {
                 // wait for the dispatch thread to start if we aren't started yet, but requested it
-                edt.lock.wait();
+                edt.lock.lock();
+                try {
+                    edt.condition.await();
+                } finally {
+                    edt.lock.unlock();
+                }
+
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                Thread.currentThread()
+                      .interrupt();
             }
         }
 
@@ -182,8 +193,11 @@ class WindowsEventDispatch implements Runnable {
 
         User32.SetWindowLong(hWnd, User32.GWL_WNDPROC, WndProc);
 
-        synchronized (lock) {
-            lock.notifyAll();
+        lock.lock();
+        try {
+            condition.notifyAll();
+        } finally {
+            lock.unlock();
         }
 
         MSG msg = new MSG();
