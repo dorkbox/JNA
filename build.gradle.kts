@@ -79,7 +79,7 @@ tasks.jar.get().apply {
 // NOTE: compileOnly is used because there are some classes/dependencies that ARE NOT necessary to be included, UNLESS the user
 //  is actually using that part of the library. If this happens, they will (or should) already be using the dependency)
 dependencies {
-    api("com.dorkbox:OS:1.8")
+    api("com.dorkbox:OS:1.11")
     api("com.dorkbox:Updates:1.1")
 
     implementation("org.slf4j:slf4j-api:2.0.7")
