@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,4 +122,12 @@ class User32_32 implements User32 {
     @Override
     public native
     HMONITOR MonitorFromPoint(POINT.ByValue pt, int dwFlags);
+
+    @Override
+    public native
+    Pointer SetThreadDpiAwarenessContext(Pointer dpiContext);
+
+    @Override
+    public native
+    int GetDpiForSystem();
 }

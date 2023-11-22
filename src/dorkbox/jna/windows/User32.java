@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,10 @@ interface User32 {
 
     int WM_LBUTTONUP = 0x202;
     int WM_RBUTTONUP = 0x205;
+
+    Pointer DPI_AWARENESS_CONTEXT_UNAWARE = new Pointer(-1);
+    Pointer DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = new Pointer(-2);
+    Pointer DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE = new Pointer(-3);
 
     /**
      * This is overridden by the 64-bit version to be SetWindowLongPtr instead.
@@ -170,4 +174,14 @@ interface User32 {
      * https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-monitorfrompoint
      */
     HMONITOR MonitorFromPoint(POINT.ByValue pt, int dwFlags);
+
+    /**
+     * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforsystem
+     */
+    int GetDpiForSystem();
+
+    /**
+     * https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setthreaddpiawarenesscontext
+     */
+    Pointer SetThreadDpiAwarenessContext(Pointer dpiContext);
 }

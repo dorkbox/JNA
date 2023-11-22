@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,14 @@ import dorkbox.os.OS;
  */
 public
 class ShCore {
+    public static final int DPI_AWARENESS_INVALID = -1;
+    public static final int DPI_AWARENESS_UNAWARE = 0;
+    public static final int DPI_AWARENESS_SYSTEM_AWARE = 1;
+    public static final int DPI_AWARENESS_PER_MONITOR_AWARE = 2;
+
+
     private static Function GetDpiForMonitor = null;
+    private static Function SetProcessDpiAwareness = null;
 
     static {
         if (OS.Windows.INSTANCE.isWindows8_1_plus()) {
@@ -47,6 +54,7 @@ class ShCore {
             // Abusing static fields this way is not proper, but it gets the job done nicely.
             // GetDpiForMonitor is NOT always available! (Windows 8.1+)
             GetDpiForMonitor = library.getFunction("GetDpiForMonitor");
+            SetProcessDpiAwareness = library.getFunction("SetProcessDpiAwareness");
         }
     }
 
@@ -80,6 +88,20 @@ class ShCore {
             return (WinNT.HRESULT) GetDpiForMonitor.invoke(WinNT.HRESULT.class, new Object[]{hMonitor.getPointer(), dpiType, dpiX, dpiY});
         } else {
             return null;
+        }
+    }
+
+    /**
+     * https://learn.microsoft.com/en-us/windows/win32/api/shellscalingapi/nf-shellscalingapi-setprocessdpiawareness
+     */
+    public static int SetProcessDpiAwareness(int value) {
+        if (SetProcessDpiAwareness != null) {
+            // HRESULT SetProcessDpiAwareness(
+            //   [in] PROCESS_DPI_AWARENESS value
+            // );
+            return (int) SetProcessDpiAwareness.invoke(Integer.class, new Object[]{value});
+        } else {
+            return -1;
         }
     }
 }
