@@ -35,7 +35,7 @@ object Extras {
     // set for the project
     const val description = "Native JNA extensions for Linux, MacOS, and Windows, Java 1.8+"
     const val group = "com.dorkbox"
-    const val version = "1.3"
+    const val version = "1.4"
 
     // set as project.ext
     const val name = "JNA"
