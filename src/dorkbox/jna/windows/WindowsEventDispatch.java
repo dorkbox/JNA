@@ -195,7 +195,7 @@ class WindowsEventDispatch implements Runnable {
 
         lock.lock();
         try {
-            condition.notifyAll();
+            condition.signalAll();;
         } finally {
             lock.unlock();
         }
