@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class GtkLoader {
      */
     public static
     String getVersion() {
-        return JNA.getVersion();
+        return JNA.INSTANCE.getVersion();
     }
 
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep gtk
