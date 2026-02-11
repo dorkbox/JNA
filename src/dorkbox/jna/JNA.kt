@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,56 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.jna;
+package dorkbox.jna
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import com.sun.jna.Library;
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
-import com.sun.jna.win32.W32APIOptions;
-
-import dorkbox.os.OS;
+import com.sun.jna.Library
+import com.sun.jna.Native
+import com.sun.jna.NativeLibrary
+import com.sun.jna.win32.W32APIOptions
+import dorkbox.os.OS.isWindows
+import dorkbox.updates.Updates.add
 
 /**
  * Helper method to get the library info from JNA when registering via direct map
  */
-public
-class JNA {
-
+object JNA {
     /**
      * Gets the version number.
      */
-    public static
-    String getVersion() {
-        return "1.4";
-    }
+    val version: String = "1.4"
 
-    static {
+    init {
         // Add this project to the updates system, which verifies this class + UUID + version information
-        dorkbox.updates.Updates.INSTANCE.add(JNA.class, "b416694a22ed4a1d9e612a1e9b6c76cf", getVersion());
+        add(JNA::class.java, "b416694a22ed4a1d9e612a1e9b6c76cf", version)
     }
 
-    public static
-    NativeLibrary register(final String libraryName, final Class<?> clazz) throws IllegalArgumentException {
-        final Map<String, Object> options = new HashMap<String, Object>();
-        options.put(Library.OPTION_CLASSLOADER, clazz.getClassLoader());
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun register(libraryName: String?, clazz: Class<*>): NativeLibrary {
+        val options = mutableMapOf<String?, Any?>()
+        options[Library.OPTION_CLASSLOADER] = clazz.classLoader
 
-        if (OS.INSTANCE.isWindows()) {
-            Set<Map.Entry<String, Object>> entries = W32APIOptions.DEFAULT_OPTIONS.entrySet();
-            for (Map.Entry<String, Object> entry : entries) {
-                options.put(entry.getKey(), entry.getValue());
+        if (isWindows) {
+            val entries = W32APIOptions.DEFAULT_OPTIONS.entries
+            for (entry in entries) {
+                options[entry.key] = entry.value
             }
         }
 
-        final NativeLibrary library = NativeLibrary.getInstance(libraryName, options);
-        if (library == null) {
-            throw new IllegalArgumentException(libraryName + " doesn't exist or cannot be loaded.");
-        }
+        val library = NativeLibrary.getInstance(libraryName, options)
+        requireNotNull(library) { "$libraryName doesn't exist or cannot be loaded." }
 
-        Native.register(clazz, library);
-        return library;
+        Native.register(clazz, library)
+        return library
     }
 }
