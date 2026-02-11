@@ -20,4 +20,5 @@ module dorkbox.jna {
     // these are compile only deps
     requires static com.sun.jna;
     requires static com.sun.jna.platform;
+    requires static org.javassist;
 }

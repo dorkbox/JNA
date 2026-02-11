@@ -75,6 +75,8 @@ dependencies {
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
+    // used for better cross-module reflection access to classes normally not accessible.
+    compileOnly("org.javassist:javassist:3.29.2-GA")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("ch.qos.logback:logback-classic:1.5.26")
