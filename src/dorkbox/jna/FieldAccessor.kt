@@ -38,6 +38,8 @@ abstract class FieldAccessor {
     abstract fun init(clazz: Class<*>, index: Int)
 
     companion object {
+        val version = JNA.version
+
         data class FieldInfo(val fieldName: String, val fieldType: Class<*>, val private: Boolean)
 
         private val noOpAccessor = object : FieldAccessor() {

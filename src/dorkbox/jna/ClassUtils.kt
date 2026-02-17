@@ -51,6 +51,8 @@ import kotlin.byteArrayOf
  * When injecting into the bootstrap classloader, this COMPLETELY bypass all security checks, as it calls native methods directly via JNA.
  */
 object ClassUtils {
+    val version = JNA.version
+
     private val libJvm: JVM
 
     private val libName: String

@@ -1,4 +1,4 @@
- - JNA - Native JNA extensions for Linux, MacOS, and Windows, Java 25
+ - JNA - Native JNA extensions for Linux, MacOS, and Windows
    [The Apache Software License, Version 2.0]
    https://git.dorkbox.com/dorkbox/JNA
    Copyright 2026
@@ -24,6 +24,16 @@
        https://github.com/twall/jna
        Copyright 2026
          Timothy Wall
+
+     - Javassist - Javassist (JAVA programming ASSISTant) makes Java bytecode manipulation simple
+       [The Apache Software License, Version 2.0]
+       https://www.javassist.org
+       https://github.com/jboss-javassist/javassist
+       Copyright 2026
+         Shigeru Chiba
+         Bill Burke
+         Jason T. Greene
+       Licensed under the MPL/LGPL/Apache triple license
 
      - SLF4J - Simple facade or abstraction for various logging frameworks
        [MIT License]
