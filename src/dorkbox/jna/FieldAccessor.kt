@@ -58,7 +58,7 @@ abstract class FieldAccessor {
             }
         }
         private val accessoryIndex = AtomicInteger(0)
-        private const val DEBUG = true
+        private const val DEBUG = false
 
         private val classToAccessor = mutableMapOf<String, FieldAccessor>()
 
