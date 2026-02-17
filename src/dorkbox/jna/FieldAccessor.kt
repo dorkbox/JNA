@@ -28,54 +28,106 @@ import java.util.concurrent.atomic.*
 
 abstract class FieldAccessor {
     @JvmField
-    protected var FIELDS: Array<Field?>? = null
+    var declaredFields: Array<Field> = emptyArray()
 
     // the class methods here are rewritten using javassist.
     abstract fun get(index: Int, nativeObject: Any?): Any?
 
     abstract fun get(fieldName: String, nativeObject: Any?): Any?
 
-    abstract fun init(index: Int)
+    abstract fun init(clazz: Class<*>, index: Int)
 
     companion object {
         data class FieldInfo(val fieldName: String, val fieldType: Class<*>, val private: Boolean)
 
+        private val noOpAccessor = object : FieldAccessor() {
+            init {
+                declaredFields = emptyArray()
+            }
+            override fun get(index: Int, nativeObject: Any?): Any? {
+                return null
+            }
+
+            override fun get(fieldName: String, nativeObject: Any?): Any? {
+                return null
+            }
+
+            override fun init(clazz: Class<*>, index: Int) {
+            }
+        }
         private val accessoryIndex = AtomicInteger(0)
-        private const val DEBUG = false
+        private const val DEBUG = true
+
+        private val classToAccessor = mutableMapOf<String, FieldAccessor>()
 
         @Throws(Exception::class)
-        fun create(protectedClass: Class<*>, fieldNames: List<String> = emptyList()): FieldAccessor {
-            return create(protectedClass.name, fieldNames)
+        fun caching(protectedClass: Class<*>): FieldAccessor {
+            val protectedClassName = protectedClass.name
+            synchronized(classToAccessor) {
+                if (!classToAccessor.containsKey(protectedClassName)) {
+                    classToAccessor[protectedClassName] = create(protectedClass)
+                }
+                return classToAccessor[protectedClassName]!!
+            }
+        }
+
+        @Throws(Exception::class)
+        fun caching(protectedClassName: String): FieldAccessor {
+            synchronized(classToAccessor) {
+                if (!classToAccessor.containsKey(protectedClassName)) {
+                    classToAccessor[protectedClassName] = create(protectedClassName)
+                }
+                return classToAccessor[protectedClassName]!!
+            }
         }
 
         @Throws(Exception::class)
         fun create(protectedClassName: String, fieldNames: List<String> = emptyList()): FieldAccessor {
+            val clazz = Class.forName(protectedClassName)
+            return create(clazz, fieldNames)
+        }
+
+        @Throws(Exception::class)
+        fun create(protectedClass: Class<*>, fieldNames: List<String> = emptyList()): FieldAccessor {
             val pool = ClassPool.getDefault()
             val classSuffix = "\$Generated_" + accessoryIndex.getAndIncrement()
 
-            val classFieldInfo = getPrivateInfo(protectedClassName)
+            val classFieldInfo = getFieldInfo(protectedClass)
+            if (classFieldInfo.isEmpty()) {
+                // don't bother with anything since there is nothing to access.
+                return noOpAccessor
+            }
+
             var classFieldsToMap = fieldNames
-            if (fieldNames.isEmpty()) {
+            if (classFieldsToMap.isEmpty()) {
                 // if none are specified, then we get ALL the fields
                 classFieldsToMap = classFieldInfo.map { it.fieldName }
             }
 
             // create the glue-class
-            val glueClassName = createGlueClass(pool, protectedClassName, classFieldInfo, classSuffix, classFieldsToMap)
+            val glueClassName = createGlueClass(pool, protectedClass, classFieldInfo, classSuffix, classFieldsToMap)
+            val accessor = createAccessor(pool, classFieldInfo, classSuffix, classFieldsToMap, glueClassName)
 
-            val accessor = createAccessor(pool, protectedClassName, classFieldInfo, classSuffix, classFieldsToMap, glueClassName)
-
-            classFieldsToMap.forEachIndexed { index, _ ->
-                accessor.init(index)
+            @Suppress("UNCHECKED_CAST")
+            accessor.declaredFields = arrayOfNulls<Field>(classFieldsToMap.size) as Array<Field>
+            classFieldsToMap.forEachIndexed { index, fieldName ->
+                accessor.init(protectedClass, index)
             }
             return accessor
         }
 
-        private fun getPrivateInfo(className: String): List<FieldInfo> {
-            val clazz = Class.forName(className)
-            return clazz.declaredFields.map { field ->
+        private fun getFieldInfo(clazz: Class<*>): List<FieldInfo> {
+            return clazz.declaredFields.filterNot{ it.name.startsWith("$") }.map { field ->
                 FieldInfo(field.name, field.type, Modifier.isPrivate(field.modifiers))
             }
+        }
+
+        private fun forEach(classFieldInfo: List<FieldInfo>, fieldNames: List<String>, func: (Int, String, Class<*>) -> Unit): Boolean {
+            fieldNames.forEachIndexed { index, fieldName ->
+                val fieldInfo = classFieldInfo.first { it.fieldName == fieldName }
+                func(index, fieldName, fieldInfo.fieldType)
+            }
+            return true
         }
 
         private fun forEachPrivate(classFieldInfo: List<FieldInfo>, fieldNames: List<String>, func: (Int, String, Class<*>) -> Unit): Boolean {
@@ -100,11 +152,13 @@ abstract class FieldAccessor {
 
         private fun createGlueClass(
             pool: ClassPool,
-            protectedClassName: String,
+            protectedClass: Class<*>,
             classFieldInfo: List<FieldInfo>,
             classSuffix: String,
             fieldNames: List<String>
         ): String {
+
+            val protectedClassName = protectedClass.name
             val gluePackage = protectedClassName.substringBeforeLast(".")
             val glueClassName = "$gluePackage.FieldAccessory$classSuffix"
 
@@ -152,28 +206,30 @@ abstract class FieldAccessor {
             method = CtNewMethod.make(g, dynamicClass)
             dynamicClass.addMethod(method)
 
+            //////////
+            // INIT
+            //////////
 
-            g =  "public static java.lang.reflect.Field init(int index) {\n"
-            g +=    "Class clazz = Class.forName(\"${protectedClassName}\");\n"
-            forEachPrivate(classFieldInfo, fieldNames) { index, fieldName, _ ->
-                g +=    "if (index == ${index}) {\n"
-                g +=        "java.lang.reflect.Field field = clazz.getDeclaredField( \"$fieldName\" );\n"
-                g +=        "field.setAccessible( true );\n"
-                if (DEBUG) {
-                g +=            "java.lang.System.err.println(\"$glueClassName : Updating access: $index for '$fieldName'\");\n"
-                }
-                g +=        "return field;\n"
-                g +=    "}\n"
+            g =  "public static java.lang.reflect.Field init(Class clazz, int index) {\n"
+            forEach(classFieldInfo, fieldNames) { index, fieldName, _ ->
+            g +=    "if (index == ${index}) {\n"
+            g +=        "java.lang.reflect.Field field = clazz.getDeclaredField( \"$fieldName\" );\n"
+            g +=        "field.setAccessible( true );\n"
+            if (DEBUG) {
+            g +=            "java.lang.System.err.println(\"$glueClassName : Updating access: $index for '$fieldName'\");\n"
+            }
+            g +=        "return field;\n"
+            g +=    "}\n"
             }
 
-            forEachNotPrivate(classFieldInfo, fieldNames) { index, fieldName, _ ->
-                g +=    "if (index == ${index}) {\n"
-                if (DEBUG) {
-                g +=        "java.lang.System.err.println(\"$glueClassName : Skipping direct access: $index for '$fieldName'\");\n"
-                }
-                g +=        "return null;\n"
-                g +=    "}\n"
-            }
+//            forEachNotPrivate(classFieldInfo, fieldNames) { index, fieldName, _ ->
+//            g +=    "if (index == ${index}) {\n"
+//            if (DEBUG) {
+//            g +=        "java.lang.System.err.println(\"$glueClassName : Skipping direct access: $index for '$fieldName'\");\n"
+//            }
+//            g +=        "return null;\n"
+//            g +=    "}\n"
+//            }
 
             g += " return null;\n}"
 
@@ -188,14 +244,12 @@ abstract class FieldAccessor {
 
         fun createAccessor(
             pool: ClassPool,
-            protectedClassName: String,
             classFieldInfo: List<FieldInfo>,
             classSuffix: String,
             classFieldsToMap: List<String>,
             glueClassName: String
         ): FieldAccessor {
-
-            // Create unique class name
+            // Create a unique class name
             val qualifiedName = FieldAccessor::class.qualifiedName
             val classFixerName = qualifiedName + classSuffix
             val classFixer = pool.makeClass(classFixerName)
@@ -214,7 +268,7 @@ abstract class FieldAccessor {
                     if (DEBUG) {
             body +=     "java.lang.System.err.println(\"$classFixerName : Getting by field: \" + $1 );\n"
                     }
-            body +=     "return ${glueClassName}.getByField(FIELDS[$1], $2);\n"
+            body +=     "return ${glueClassName}.getByField(declaredFields[$1], $2);\n"
                 } else {
                     if (DEBUG) {
             body +=     "java.lang.System.err.println(\"$classFixerName : Getting by index: \" + $1 );\n"
@@ -252,24 +306,24 @@ abstract class FieldAccessor {
 
             body = "{\n"
             classFieldsToMap.forEachIndexed { index, fieldName ->
-                body += "if (\"$fieldName\".equals($1)) {\n"
+            body += "if (\"$fieldName\".equals($1)) {\n"
                 if (classFieldInfo.first { it.fieldName == fieldName }.private) {
                     if (DEBUG) {
-                        body +=     "java.lang.System.err.println(\"$classFixerName : Getting by string -> field: \" + $1 + \", int: \" + $index);\n"
+            body +=     "java.lang.System.err.println(\"$classFixerName : Getting by string -> field: \" + $1 + \", int: \" + $index);\n"
                     }
-                    body +=     "return ${glueClassName}.getByField(FIELDS[$index], $2);\n"
+            body +=     "return ${glueClassName}.getByField(declaredFields[$index], $2);\n"
                 } else {
                     if (DEBUG) {
-                        body +=     "java.lang.System.err.println(\"$classFixerName : Getting by string -> index: \" + $1  + \", int: \" + $index);\n"
-                        body +=     "Object value = ${glueClassName}.getByIndex($index, $2);\n"
-                        body +=     "java.lang.System.err.println(\"$classFixerName : Getting by string -> index: \" + $1  + \", int: \" + $index + \", value: \" + value);\n"
+            body +=     "java.lang.System.err.println(\"$classFixerName : Getting by string -> index: \" + $1  + \", int: \" + $index);\n"
+            body +=     "Object value = ${glueClassName}.getByIndex($index, $2);\n"
+            body +=     "java.lang.System.err.println(\"$classFixerName : Getting by string -> index: \" + $1  + \", int: \" + $index + \", value: \" + value);\n"
                     } else {
-                        body +=     "Object value = ${glueClassName}.getByIndex($index, $2);\n"
+            body +=     "Object value = ${glueClassName}.getByIndex($index, $2);\n"
                     }
 
-                    body +=     "return value;\n"
+            body +=     "return value;\n"
                 }
-                body += "}\n"
+            body += "}\n"
             }
             body +="return null; }"
 
@@ -288,13 +342,14 @@ abstract class FieldAccessor {
             newMethod.getMethodInfo().rebuildStackMapForME(pool)
 
 
+
             method = ctAbstractClass.getDeclaredMethod("init")
+//            val size = classFieldsToMap.size
             body =
                 "{" +
-                    "if (FIELDS == null) {" +
-                        "FIELDS = new java.lang.reflect.Field[${classFieldsToMap.size}];" +
-                    "}\n" +
-                    "FIELDS[$1] = ${glueClassName}.init($1);" +
+                    "java.lang.reflect.Field field = ${glueClassName}.init($1, $2);" +
+//                    "java.lang.System.err.println(\"$classFixerName : init return ($size) \" + field  + \", index: \" + $2);\n" +
+                    "declaredFields[$2] = field;" +
                 "}"
             newMethod = CtNewMethod.make(
                 method.returnType,
