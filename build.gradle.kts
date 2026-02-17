@@ -32,7 +32,7 @@ GradleUtils.load {
 
     description = "Native JNA extensions for Linux, MacOS, and Windows"
     name = "JNA"
-    version = "1.5"
+    version = "1.6"
 
     vendor = "Dorkbox LLC"
     vendorUrl = "https://dorkbox.com"
