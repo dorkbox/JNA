@@ -39,6 +39,7 @@ abstract class FieldAccessor {
 
     companion object {
         val version = JNA.version
+        var DEBUG = false
 
         data class FieldInfo(val fieldName: String, val fieldType: Class<*>, val private: Boolean)
 
@@ -58,8 +59,6 @@ abstract class FieldAccessor {
             }
         }
         private val accessoryIndex = AtomicInteger(0)
-        private const val DEBUG = false
-
         private val classToAccessor = mutableMapOf<String, FieldAccessor>()
 
         @Throws(Exception::class)
@@ -181,7 +180,7 @@ abstract class FieldAccessor {
                                     Long::class.javaPrimitiveType -> "Long.valueOf(castValue.$fieldName);\n"
                                     Float::class.javaPrimitiveType -> "Float.valueOf(castValue.$fieldName);\n"
                                     Double::class.javaPrimitiveType -> "Double.valueOf(castValue.$fieldName);\n"
-                                    else -> "castValue;\n"
+                                    else -> "castValue.$fieldName;\n"
                 }
                 if (DEBUG) {
                 g +=            "java.lang.System.err.println(\"$glueClassName : Getting by index : $index '\" + value + \"'\" );\n"
